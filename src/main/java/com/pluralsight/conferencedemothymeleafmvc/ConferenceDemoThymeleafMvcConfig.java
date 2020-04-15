@@ -1,0 +1,79 @@
+package com.pluralsight.conferencedemothymeleafmvc;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.LocaleResolver;
+import org.springframework.web.servlet.ViewResolver;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
+import org.springframework.web.servlet.i18n.SessionLocaleResolver;
+import org.thymeleaf.spring5.SpringTemplateEngine;
+import org.thymeleaf.spring5.templateresolver.SpringResourceTemplateResolver;
+import org.thymeleaf.spring5.view.ThymeleafViewResolver;
+
+import java.util.Locale;
+
+@Configuration
+@RequiredArgsConstructor
+public class ConferenceDemoThymeleafMvcConfig implements WebMvcConfigurer {
+
+    private final ApplicationContext applicationContext;
+
+    @Bean
+    public ViewResolver thymeleafViewResolver(SpringTemplateEngine springTemplateEngine) {
+        ThymeleafViewResolver thymeleafViewResolver = new ThymeleafViewResolver();
+        thymeleafViewResolver.setOrder(0);
+        thymeleafViewResolver.setTemplateEngine(springTemplateEngine);
+
+        return thymeleafViewResolver;
+    }
+
+    @Bean
+    public SpringTemplateEngine springTemplateEngine(SpringResourceTemplateResolver templateResolver) {
+        SpringTemplateEngine springTemplateEngine = new SpringTemplateEngine();
+        springTemplateEngine.setEnableSpringELCompiler(true);
+        springTemplateEngine.addTemplateResolver(templateResolver);
+
+        return springTemplateEngine;
+    }
+
+    @Bean
+    public SpringResourceTemplateResolver templateResolver() {
+        SpringResourceTemplateResolver springResourceTemplateResolver = new SpringResourceTemplateResolver();
+        springResourceTemplateResolver.setApplicationContext(applicationContext);
+        springResourceTemplateResolver.setPrefix("/WEB-INF/views/");
+        springResourceTemplateResolver.setSuffix(".html");
+        return springResourceTemplateResolver;
+    }
+
+    @Bean
+    public LocaleResolver localeResolver() {
+        SessionLocaleResolver sessionLocaleResolver = new SessionLocaleResolver();
+        sessionLocaleResolver.setDefaultLocale(Locale.US);
+
+        return sessionLocaleResolver;
+    }
+
+    @Bean
+    public LocaleChangeInterceptor localeChangeInterceptor() {
+        LocaleChangeInterceptor localeChangeInterceptor = new LocaleChangeInterceptor();
+        localeChangeInterceptor.setParamName("lang");
+
+        return localeChangeInterceptor;
+    }
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/files/pdf/**")
+                .addResourceLocations("/WEB-INF/pdf/");
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(localeChangeInterceptor());
+    }
+}
